@@ -1,0 +1,49 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html lang="ko">
+<head>
+<title>히트맵(열지도)</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" href="https://openlayers.org/en/v3.20.1/css/ol.css" type="text/css">
+<script src="https://openlayers.org/en/v3.20.1/build/ol.js"></script>
+</head>
+<body>
+<header th:replace="sub/menu.html :: menu"></header>
+
+<div id="map" class="left"></div>
+
+<script>
+var pnt = new ol.geom.Point([126, 37]).transform('EPSG:4326', 'EPSG:3857') //위경도를 오픈레이어에서 사용중인 값으로 변환
+var changePoints = pnt.getCoordinates(); //1차원 배열 크기 2개의 값 [x, y]
+
+//히트맵
+var vector = new ol.layer.Heatmap({ //히트맵을 만들 레이어
+    source: new ol.source.Vector({  //벡터 소스
+        url: '/data/heating.kml' //만들어 놓은 kml파일
+        , format: new ol.format.KML({     //형식 지정
+            extractStyles: false
+        })
+    })
+    , blur: 15      //블러값이 낮을수록 번짐이 커진다. 번짐이 겹치는 곳은 붉은색으로 표기된다.
+    , radius: 20    //원 넓이
+});
+
+var layer = new ol.layer.Tile({
+    source: new ol.source.OSM()
+});
+
+var map = new ol.Map({
+    target: 'map'
+    , layers: [ //사용하는 레이어, 벡터레이어를 추가해야 이벤트에 따른 원그리기, 선그리기 객체를 지도에 넣을 수 있다.
+        layer
+        , vector
+    ], view: new ol.View({
+        center: changePoints  //중앙 잡기
+        , zoom: 8   //줌
+    })
+});
+</script>
+</body>
+</html>

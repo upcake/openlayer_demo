@@ -1,0 +1,109 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html lang="ko">
+<head>
+<title>이미지 아이콘 호버, 클릭</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" href="https://openlayers.org/en/v3.20.1/css/ol.css" type="text/css">
+<script src="https://openlayers.org/en/v3.20.1/build/ol.js"></script>
+</head>
+
+<body>
+<header th:replace="sub/menu.html :: menu"></header>
+
+<div id="map" class="left"></div>
+
+<script type="text/javascript">
+//Default
+var pnt = new ol.geom.Point([126, 37]).transform('EPSG:4326', 'EPSG:3857') //위경도를 오픈레이어에서 사용중인 값으로 변환
+var center = pnt.getCoordinates(); //1차원 배열 크기 2개의 값 [x, y]
+
+
+var layer = new ol.layer.Tile({
+    source: new ol.source.OSM()
+});
+
+var myView = new ol.View({
+    center: center,
+    zoom: 8
+}); //뷰 객체를 전역변수로 뺀다.
+
+var map = new ol.Map({
+    layers: [layer]
+    , target: 'map'
+    , view: myView
+});
+
+//아이콘 레이어
+function createStyle(src) {
+    return new ol.style.Style({
+        image: new ol.style.Icon(({
+            anchor: [0.5, 0.5]
+            , crossOrigin: 'anonymous'
+            , src: src
+            , imgSize: [50, 50]
+        }))
+    });
+}
+
+var vectorSource = new ol.source.Vector({projection: 'EPSG:4326'});   //새로운 벡터 생성
+var iconFeature = new ol.Feature(pnt);
+iconFeature.set('style', createStyle('/img/icon.png'));
+iconFeature.set("index", "001");
+
+vectorSource.addFeature(iconFeature);
+var iconLayer = new ol.layer.Vector({
+    style: function(feature) {
+        return feature.get('style')
+    },
+    source: vectorSource
+});
+map.addLayer(iconLayer);
+
+//맵 객체에 이벤트 리스너를 붙이고 이벤트 효과에 대해서 처리하는 방식으로 이벤트 적용
+//hover 효과
+let hover = null;
+map.on('pointermove', function(evt) {   //pointermove : 마우스가 hover될때
+    map.getTargetElement().style.cursor = map.hasFeatureAtPixel(evt.pixel) ? 'pointer' : '';
+    if(hover != null) {
+        if(hover.get('index') == '001') {
+            hover.setStyle(createStyle('/img/icon.png'));
+            console.log('hover 효과 해제');
+        }
+        hover = null;
+    }
+    map.forEachFeatureAtPixel(evt.pixel, function(f) {
+        hover = f;
+        return true;
+    });
+
+    if(hover) {
+        if(hover.get('index') == '001') {
+            console.log('hover 효과');
+            hover.setStyle(createStyle('/img/icon2.png'));
+        }
+    }
+});
+
+//click 효과
+let clicker = null;
+map.on('click', function(evt) {
+    map.forEachFeatureAtPixel(evt.pixel, function(f) {
+        clicker = f;
+        return true;
+    });
+
+    if(clicker != null) {
+        console.log(clicker.get("index"));
+        if(clicker.get("index") == '001') {
+            console.log('click 효과');
+            clicker.setStyle(createStyle('/img/icon3.png'));
+        }
+        clicker = null;
+    }
+});
+</script>
+</body>
+</html>

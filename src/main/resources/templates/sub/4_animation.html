@@ -1,0 +1,86 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html lang="ko">
+<head>
+<title>애니메이션</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" href="https://openlayers.org/en/v3.20.1/css/ol.css" type="text/css">
+<script src="https://openlayers.org/en/v3.20.1/build/ol.js"></script>
+</head>
+
+<body>
+<header th:replace="sub/menu.html :: menu"></header>
+
+<div id="map" class="left"></div>
+
+<select class="left" id="animation">
+    <option value='' selected>None</option>
+    <option value='rotate_a'>시계 방향</option>
+    <option value='rotate_b'>반시계 방향</option>
+    <option value='rotate_all'>한바퀴 회전 후 중앙은 한국 이동</option>
+    <option value='move'>한국으로 이동(2초)</option>
+    <option value='move_fast'>한국으로 이동(0초)</option>
+</select>
+
+<script>
+var pnt = new ol.geom.Point([126, 37]).transform('EPSG:4326', 'EPSG:3857') //위경도를 오픈레이어에서 사용중인 값으로 변환
+var korea = pnt.getCoordinates(); //1차원 배열 크기 2개의 값 [x, y]
+
+var layer = new ol.layer.Tile({
+    source: new ol.source.OSM()
+});
+
+var myView = new ol.View({
+    center: korea,
+    zoom: 8
+}); //뷰 객체를 전역변수로 뺀다.
+
+var map = new ol.Map({
+    target: 'map'
+    , layers: [ //사용하는 레이어, 벡터레이어를 추가해야 이벤트에 따른 원그리기, 선그리기 객체를 지도에 넣을 수 있다.
+        layer
+    ], view: myView
+});
+
+//셀렉트에 이벤트리스너 추가
+var el = document.getElementById("animation");
+el.addEventListener("change", ( () => {
+    
+    //뷰 객체에 애니메이션 추가
+    var x = document.getElementById("animation").value;
+    if(x == 'rotate_all') {         //한 바퀴 돌리고 중앙 한국
+        var rotation = myView.getRotation();
+        myView.animate({
+            rotation: rotation + Math.PI
+            , anchor: korea
+            , easing: ol.easing.easeIn
+        }, {
+            rotation: rotation + 2 * Math.PI
+            , easing: ol.easing.easeOut
+            , center: korea
+        });
+    } else if(x == 'rotate_a') {
+        myView.animate({
+            rotation: myView.getRotation() + Math.PI / 2
+        });
+    } else if(x == 'rotate_b') {
+        myView.animate({
+            rotation: myView.getRotation() - Math.PI / 2
+        });
+    } else if(x == 'move') {
+        myView.animate({
+            center: korea
+            , duration: 2000
+        });
+    } else if(x == 'move_fast') {
+        myView.animate({
+            center: korea
+            , duration: 0
+        });
+    }
+}), false);
+</script>
+</body>
+</html>

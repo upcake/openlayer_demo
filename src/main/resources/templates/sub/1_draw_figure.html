@@ -1,0 +1,76 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html lang="ko">
+<head>
+<title>점 선 폴리곤 원 그리기</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" href="https://openlayers.org/en/v3.20.1/css/ol.css" type="text/css">
+<script src="https://openlayers.org/en/v3.20.1/build/ol.js"></script>
+</head>
+
+<body>
+<header th:replace="sub/menu.html :: menu"></header>
+
+<div id="map" class="left"></div>
+<div class="left">
+    <label>타입 : &nbsp;</label>
+    <select id="type">
+        <option value="Point">점</option>
+        <option value="LineString">선</option>
+        <option value="Polygon">채우는 선</option>
+        <option value="Circle">원형</option>
+        <option value="None">없음</option>
+    </select>
+
+</div>
+</body>
+
+<script type="text/javascript">
+var pnt = new ol.geom.Point([126, 37]).transform('EPSG:4326', 'EPSG:3857') //위경도를 오픈레이어에서 사용중인 값으로 변환
+var changePoints = pnt.getCoordinates(); //1차원 배열 크기 2개의 값 [x, y]
+
+var layer = new ol.layer.Tile({
+   source: new ol.source.OSM() //지형정보가 존재하는 객체, Openlayers에서 제공하는 기본 레이어이다. 
+});
+
+var source = new ol.source.Vector(); //wrapX는 세계지도를 가로로 펼친다는 의미. true인경우 좌표게산 벡터가 실제 지형정보를 토대로 하므로 어긋난다고 한다. 즉, 걍 쓰면 된다
+
+var vector = new ol.layer.Vector({  //사용하는 레이어, 벡터레이얼르 추가해야 이벤트에 따른 원그리기, 선그리기 객체를 지도에 넣을 수 있다.
+    source: source
+});
+
+var map = new ol.Map({
+    target: 'map'
+    , layers: [ //사용하는 레이어, 벡터레이어를 추가해야 이벤트에 따른 원그리기, 선그리기 객체를 지도에 넣을 수 있다.
+        layer
+        , vector
+    ], view: new ol.View({
+        center: changePoints  //중앙 잡기
+        , zoom: 8   //줌
+    })
+});
+
+var selector = document.getElementById('type'); //셀렉트 태그에 이벤트를 걸기 위해
+
+var draw = null; //그릴 객체
+function startEvent() { //이벤트 시작함수
+    var value = selector.value;
+    if (value !== 'None') {
+        draw = new ol.interaction.Draw({ //그리기
+            source: source
+            , type: selector.value
+        });
+        map.addInteraction(draw); //구현된 map 객체에 이벤트 위치를 스스로 추가하여 그리는 부분
+    }
+};
+
+selector.onchange = function() {
+    map.removeInteraction(draw);
+    startEvent();
+};
+
+startEvent();
+</script>
+</html>

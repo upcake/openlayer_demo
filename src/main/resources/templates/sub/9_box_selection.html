@@ -1,0 +1,92 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html lang="ko">
+<head>
+<title>Box Selection</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" href="https://openlayers.org/en/v3.20.1/css/ol.css" type="text/css">
+<script src="https://openlayers.org/en/v3.20.1/build/ol.js"></script>
+</head>
+<body>
+<header th:replace="sub/menu.html :: menu"></header>
+
+<div id="map" class="left"></div>
+<div id="info">CTRL + 드래그로 드래그 가능</div>
+
+<script>
+var vectorSource = new ol.source.Vector({
+    url: "https://openlayers.org/en/v3.20.1/examples/data/geojson/countries.geojson"
+    , format: new ol.format.GeoJSON()
+});
+
+var map = new ol.Map({
+    layers: [
+        new ol.layer.Tile({
+            source: new ol.source.OSM()
+        }),
+        new ol.layer.Vector({
+            source: vectorSource
+        })
+    ]
+    , target: 'map'
+    , view: new ol.View({
+        center: [0, 0]
+        , zoom: 2
+    })
+});
+
+//클릭, 여기까지만 작성해도 국가 클릭됨
+var select = new ol.interaction.Select();
+
+//클릭한 피쳐 이름 인포박스에 추가
+//인포박스
+var infoBox = document.getElementById("info");
+
+//이벤트추가
+select.getFeatures().on("add", function(e) {
+    var feature = e.element;
+    infoBox.innerHTML = feature.H.name;
+});
+map.addInteraction(select);
+
+var selectedFeatures = select.getFeatures();
+
+//드래그, 여기까지 작성하면 드래그만 되고 국가는 클릭 안됨
+var dragBox = new ol.interaction.DragBox({
+    condition: ol.events.condition.platformModifierKeyOnly
+});
+map.addInteraction(dragBox);
+
+//인포박스, 여기까지 작성하면 드래그할 시 국가 클릭 되고 이름이 div에 추가됨
+var infoBox = document.getElementById("info");
+dragBox.on('boxend', function() {
+    //드래그 박스에 교차되는 피쳐들을,
+    //선택된 피쳐들의 collection에 추가하고 info div에 이름을 추가한다
+    var info = [];
+    var extent = dragBox.getGeometry().getExtent();
+    vectorSource.forEachFeatureIntersectingExtent(extent, function(feature) {
+        selectedFeatures.push(feature);
+        console.log(feature);
+        info.push(feature.get("name"));
+    });
+
+    if(info.length > 0) {
+        infoBox.innerHTML = info.join(', ');
+    }
+});
+
+//새 드래그 박스 그릴때 info div 초기화
+dragBox.on('boxstart', function() {
+    selectedFeatures.clear();
+    infoBox.innerHTML = '&nbsp;';
+});
+
+map.on("click", function() {
+    selectedFeatures.clear();
+    infoBox.innerHTML = "&nbsp;";
+});
+</script>
+</body>
+</html>

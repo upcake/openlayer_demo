@@ -1,0 +1,50 @@
+@charset "UTF-8";
+
+html, body {
+	margin: 0;
+	padding: 0;
+}
+
+header {
+	border-bottom: 1px solid #000;
+}
+
+a {
+	text-decoration: none;
+}
+
+.side_list {
+	position: absolute;
+	border-right: 1px solid #000;
+	width: 200px;
+	font-size: 16px;
+}
+
+.side_link {
+	display: block;
+	text-align: center;
+	padding: 25px 0;
+	border-bottom: 1px solid #000;
+}
+
+#map {
+    width: 1366px;
+    height: 768px;
+    border: 1px solid #000;
+    margin: -1px 40px 40px 200px;
+}
+
+.left{
+    float: left;
+    margin: 2%;
+}
+
+.right{
+    float: right;
+    margin: 2%;
+}
+
+.ol-dragbox {
+    background-color: rgba(255, 255, 255, 0.4);
+    border-color: rgba(100, 150, 0.1);
+}

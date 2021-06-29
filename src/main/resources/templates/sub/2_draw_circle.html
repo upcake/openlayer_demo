@@ -1,0 +1,72 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html lang="ko">
+<head>
+<title>원 + 스타일 그리기</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" href="https://openlayers.org/en/v3.20.1/css/ol.css" type="text/css">
+<script src="https://openlayers.org/en/v3.20.1/build/ol.js"></script>
+</head>
+
+<body>
+<header th:replace="sub/menu.html :: menu"></header>
+<div id="map" class="left"></div>
+
+<script type="text/javascript">
+//원 추가에 필요한 객체
+var pnt = new ol.geom.Point([126, 37]).transform('EPSG:4326', 'EPSG:3857') //위경도를 오픈레이어에서 사용중인 값으로 변환
+var changePoints = pnt.getCoordinates(); //1차원 배열 크기 2개의 값 [x, y]
+
+var layer = new ol.layer.Tile({
+   source: new ol.source.OSM() //지형정보가 존재하는 객체, Openlayers에서 제공하는 기본 레이어이다. 
+});
+
+var source = new ol.source.Vector(); //wrapX는 세계지도를 가로로 펼친다는 의미. true인경우 좌표게산 벡터가 실제 지형정보를 토대로 하므로 어긋난다고 한다. 즉, 걍 쓰면 된다
+
+var vector = new ol.layer.Vector({  //사용하는 레이어, 벡터레이얼르 추가해야 이벤트에 따른 원그리기, 선그리기 객체를 지도에 넣을 수 있다.
+    source: source
+});
+
+var map = new ol.Map({
+    target: 'map'
+    , layers: [ //사용하는 레이어, 벡터레이어를 추가해야 이벤트에 따른 원그리기, 선그리기 객체를 지도에 넣을 수 있다.
+        layer
+        , vector
+    ], view: new ol.View({
+        center: changePoints  //중앙 잡기
+        , zoom: 8   //줌
+    })
+});
+
+//벡터를 만들고 해당 벡터에 "원"속성을 넣어준다. 위치는 기존 center
+var vectorSource = new ol.source.Vector({projection: 'EPSG:4326'});   //새로운 벡터 생성
+var circle = new ol.geom.Circle(changePoints, 12000); //좌표, 반경 넓이
+var CircleFeature = new ol.Feature(circle);    //구조체로 형성
+vectorSource.addFeatures([CircleFeature]); //벡터소스에 추가
+
+//만들어진 벡터를 맵에 추가할 새로운 레이어로 생성한다. Stroke 객체는 필수이며 나머지는 효과이다.
+var vectorLayer = new ol.layer.Vector({ //추가할 벡터레이어
+    source: vectorSource
+    , style: [
+        new ol.style.Style({
+            stroke: new ol.style.Stroke({ //두께
+                color: 'rgba(240, 79, 79, 0.9)'
+                , width: 2
+            }),
+            fill: new ol.style.Fill({ //채우기
+                color: 'rgba(255, 133, 133, 0.5)'
+            }),
+            text: new ol.style.Text({ //텍스트
+                text: 'Hello World!'
+                , textAlign: 'center'
+                , font: '15px roboto, sans-serif'
+            })
+        })
+    ]
+});
+map.addLayer(vectorLayer); //만들어진 벡터를 추가
+</script>
+</body>
+</html>

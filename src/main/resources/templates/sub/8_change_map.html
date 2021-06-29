@@ -1,0 +1,67 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html lang="ko">
+<head>
+<title>이미지 아이콘 호버, 클릭</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+
+<link rel="stylesheet" th:href="@{/css/style.css}">
+<link rel="stylesheet" href="https://openlayers.org/en/v3.20.1/css/ol.css" type="text/css">
+<script src="https://openlayers.org/en/v3.20.1/build/ol.js"></script>
+
+<style>
+.map1 {
+    width: 800px;
+    height: 600px;
+    border: 3px dashed rgba(83, 206, 255, 0.6);
+    border-radius: 5px;
+    margin: -1px 20px 20px 200px;
+}
+
+.map2 {
+    width: 800px;
+    height: 600px;
+    border: 3px dashed rgba(83, 206, 255, 0.6);
+    border-radius: 5px;
+    margin: -1px 20px 20px 20px;
+}
+</style>
+</head>
+
+<body>
+<header th:replace="sub/menu.html :: menu"></header>
+
+<div id="left_map" class="map1 left"></div>
+<div id="right_map" class="map2 left"></div>
+<input type="button" value="변경" id="change"/>
+
+<script type="text/javascript">
+//Default
+var pnt = new ol.geom.Point([126, 37]).transform('EPSG:4326', 'EPSG:3857') //위경도를 오픈레이어에서 사용중인 값으로 변환
+var center = pnt.getCoordinates(); //1차원 배열 크기 2개의 값 [x, y]
+
+
+var layer = new ol.layer.Tile({
+    source: new ol.source.OSM()
+});
+
+var myView = new ol.View({
+    center: center,
+    zoom: 8
+}); //뷰 객체를 전역변수로 뺀다.
+
+var map = new ol.Map({
+    layers: [layer]
+    , view: myView
+});
+map.setTarget('left_map');  //타겟 버그
+
+//버튼 설정
+var change = document.getElementById('change'); //버튼
+change.addEventListener('click', function() {   //클릭이벤트 발생 시
+    var target = map.getTarget() === 'left_map' ? 'right_map' : 'left_map';
+    map.setTarget(target);  //타겟을 바꾸어라
+}, false);
+</script>
+</body>
+</html>
